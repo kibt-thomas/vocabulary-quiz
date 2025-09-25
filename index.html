@@ -63,6 +63,9 @@
         body.modal-open {
             overflow: hidden;
         }
+        .nickname-color {
+            color: var(--primary-600);
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 flex flex-col items-center min-h-screen p-4">
@@ -71,10 +74,12 @@
         <!-- Header & Navigation -->
         <header class="bg-white p-4 rounded-xl shadow-lg mb-6 sticky top-4 z-10">
             <div class="flex justify-between items-center">
-                <button id="header-quiz-btn" class="text-xl font-bold text-slate-700 hover:text-[var(--primary-600)] transition-colors">Vocabulary Quiz</button>
+                <button id="header-quiz-btn" class="text-xl font-bold text-slate-700 hover:text-[var(--primary-600)] transition-colors text-left">
+                    <span>Vocabulary Quiz</span>
+                </button>
                 <div class="relative" id="nav-dropdown-container">
-                    <button id="nav-toggle-btn" class="p-2 rounded-md hover:bg-slate-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    <button id="nav-toggle-btn" class="w-10 h-10 rounded-full bg-[var(--primary-600)] text-white flex items-center justify-center font-bold text-lg hover:bg-[var(--primary-700)] transition-colors">
+                        <span id="nav-avatar-initial">B</span>
                     </button>
                     <div id="nav-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl py-1">
                         <a href="#" data-page="main-page" class="nav-link block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Quiz Hub</a>
@@ -93,7 +98,7 @@
             <!-- 1. Main Page / Quiz Hub -->
             <div id="main-page" class="page active">
                 <div class="text-center bg-white p-6 rounded-xl shadow-lg mb-6">
-                    <h2 class="text-2xl font-bold text-slate-800">Ready to learn?</h2>
+                    <h2 class="text-2xl font-bold text-slate-800">Ready to learn, <span id="main-page-nickname" class="nickname-color"></span>?</h2>
                     <p class="text-slate-500 mt-2 mb-6">Start a new quiz session to practice your vocabulary.</p>
                     <button id="go-to-quiz-setup-btn" class="w-full bg-[var(--accent-500)] text-white font-bold py-3 px-4 rounded-lg hover:bg-[var(--accent-600)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent-500)] transition-colors text-lg">
                         Start Quiz
@@ -214,6 +219,13 @@
                     <h2 class="text-xl font-semibold mb-4">Settings</h2>
                     <form id="settings-form" class="space-y-6">
                         <div>
+                            <h3 class="font-medium text-slate-600 mb-2">Personalization</h3>
+                             <div>
+                                <label for="nickname-input" class="block text-sm font-medium text-slate-600">Nickname</label>
+                                <input type="text" id="nickname-input" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-[var(--primary-500)] focus:ring-1 focus:ring-[var(--primary-500)]">
+                            </div>
+                        </div>
+                        <div>
                             <h3 class="font-medium text-slate-600 mb-2">Theme</h3>
                             <div class="grid grid-cols-2 gap-3">
                                 <input type="radio" name="theme" id="theme-blue" value="blue" class="hidden">
@@ -268,6 +280,10 @@
                 </div>
             </div>
         </main>
+
+        <footer class="text-center text-xs text-slate-400 mt-6 pb-4">
+            <p>Vocabulary Quiz - v1.0.2</p>
+        </footer>
         
         <!-- MODALS & OVERLAYS (not part of main pages) -->
         <!-- Image Parser View -->
@@ -335,8 +351,12 @@
                         <div class="grid grid-cols-2 gap-3">
                             <input type="radio" name="quiz-direction" id="dir-en-de" value="en-de" class="hidden">
                             <label for="dir-en-de" class="block text-center p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-all">English to German</label>
-                            <input type="radio" name="quiz-direction" id="dir-de-en" value="de-en" class="hidden" checked>
+                            <input type="radio" name="quiz-direction" id="dir-de-en" value="de-en" class="hidden">
                             <label for="dir-de-en" class="block text-center p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-all">German to English</label>
+                        </div>
+                         <div class="mt-3">
+                             <input type="radio" name="quiz-direction" id="dir-mixed" value="mixed" class="hidden" checked>
+                             <label for="dir-mixed" class="block text-center p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-all">Mixed</label>
                         </div>
                     </div>
                     <div>
@@ -432,169 +452,20 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- Pre-loaded default lectures data (omitted for brevity) ---
             const defaultLecturesData = [
-                { english: "bat", german: "Fledermaus", lecture: "Animals" },
-                { english: "bird", german: "Vogel", lecture: "Animals" },
-                { english: "chick", german: "Küken", lecture: "Animals" },
-                { english: "cow", german: "Kuh", lecture: "Animals" },
-                { english: "duck", german: "Ente", lecture: "Animals" },
-                { english: "frog", german: "Frosch", lecture: "Animals" },
-                { english: "goat", german: "Ziege", lecture: "Animals" },
-                { english: "hen", german: "Henne", lecture: "Animals" },
-                { english: "horse", german: "Pferd", lecture: "Animals" },
-                { english: "pig", german: "Schwein", lecture: "Animals" },
-                { english: "sheep", german: "Schaf", lecture: "Animals" },
-                { english: "spider", german: "Spinne", lecture: "Animals" },
-                { english: "bear", german: "Bär", lecture: "Animals" },
-                { english: "monkey", german: "Affe", lecture: "Animals" },
-                { english: "tiger", german: "Tiger", lecture: "Animals" },
-                { english: "budgie", german: "Wellensittich", lecture: "Animals" },
-                { english: "cat", german: "Katze", lecture: "Animals" },
-                { english: "dog", german: "Hund", lecture: "Animals" },
-                { english: "fish", german: "Fisch", lecture: "Animals" },
-                { english: "guinea pig", german: "Meerschweinchen", lecture: "Animals" },
-                { english: "hamster", german: "Hamster", lecture: "Animals" },
-                { english: "mouse", german: "Maus", lecture: "Animals" },
-                { english: "rabbit", german: "Kaninchen", lecture: "Animals" },
-                { english: "rat", german: "Ratte", lecture: "Animals" },
-                { english: "turtle", german: "Schildkröte", lecture: "Animals" },
-                { english: "egg", german: "Ei", lecture: "Food and Drinks" },
-                { english: "fish and chips", german: "Fisch und Pommes", lecture: "Food and Drinks" },
-                { english: "ham", german: "Schinken", lecture: "Food and Drinks" },
-                { english: "hamburger", german: "Hamburger", lecture: "Food and Drinks" },
-                { english: "jam", german: "Marmelade", lecture: "Food and Drinks" },
-                { english: "juice", german: "Saft", lecture: "Food and Drinks" },
-                { english: "milk", german: "Milch", lecture: "Food and Drinks" },
-                { english: "muesli", german: "Müsli", lecture: "Food and Drinks" },
-                { english: "pizza", german: "Pizza", lecture: "Food and Drinks" },
-                { english: "salad", german: "Salat", lecture: "Food and Drinks" },
-                { english: "sausages", german: "Würstchen", lecture: "Food and Drinks" },
-                { english: "spaghetti", german: "Spaghetti", lecture: "Food and Drinks" },
-                { english: "tea", german: "Tee", lecture: "Food and Drinks" },
-                { english: "toast", german: "Toast", lecture: "Food and Drinks" },
-                { english: "yoghurt", german: "Joghurt", lecture: "Food and Drinks" },
-                { english: "apple", german: "Apfel", lecture: "Food and Drinks" },
-                { english: "banana", german: "Banane", lecture: "Food and Drinks" },
-                { english: "lemon", german: "Zitrone", lecture: "Food and Drinks" },
-                { english: "orange", german: "Orange", lecture: "Food and Drinks" },
-                { english: "strawberry", german: "Erdbeere", lecture: "Food and Drinks" },
-                { english: "tomato", german: "Tomate", lecture: "Food and Drinks" },
-                { english: "bread", german: "Brot", lecture: "Food and Drinks" },
-                { english: "butter", german: "Butter", lecture: "Food and Drinks" },
-                { english: "cheese", german: "Käse", lecture: "Food and Drinks" },
-                { english: "cornflakes", german: "Cornflakes", lecture: "Food and Drinks" },
-                { english: "bathroom", german: "Badezimmer", lecture: "Rooms and Furniture" },
-                { english: "bedroom", german: "Schlafzimmer", lecture: "Rooms and Furniture" },
-                { english: "children's room", german: "Kinderzimmer", lecture: "Rooms and Furniture" },
-                { english: "hall", german: "Flur", lecture: "Rooms and Furniture" },
-                { english: "kitchen", german: "Küche", lecture: "Rooms and Furniture" },
-                { english: "living room", german: "Wohnzimmer", lecture: "Rooms and Furniture" },
-                { english: "upstairs", german: "oben", lecture: "Rooms and Furniture" },
-                { english: "downstairs", german: "unten", lecture: "Rooms and Furniture" },
-                { english: "armchair", german: "Sessel", lecture: "Rooms and Furniture" },
-                { english: "bed", german: "Bett", lecture: "Rooms and Furniture" },
-                { english: "chair", german: "Stuhl", lecture: "Rooms and Furniture" },
-                { english: "cupboard", german: "Schrank", lecture: "Rooms and Furniture" },
-                { english: "fridge", german: "Kühlschrank", lecture: "Rooms and Furniture" },
-                { english: "lamp", german: "Lampe", lecture: "Rooms and Furniture" },
-                { english: "oven", german: "Ofen", lecture: "Rooms and Furniture" },
-                { english: "picture", german: "Bild", lecture: "Rooms and Furniture" },
-                { english: "shelf", german: "Regal", lecture: "Rooms and Furniture" },
-                { english: "sofa", german: "Sofa", lecture: "Rooms and Furniture" },
-                { english: "table", german: "Tisch", lecture: "Rooms and Furniture" },
-                { english: "TV", german: "Fernseher", lecture: "Rooms and Furniture" },
-                { english: "wardrobe", german: "Kleiderschrank", lecture: "Rooms and Furniture" },
-                { english: "bathtub", german: "Badewanne", lecture: "Rooms and Furniture" },
-                { english: "shower", german: "Dusche", lecture: "Rooms and Furniture" },
-                { english: "toilet", german: "Toilette", lecture: "Rooms and Furniture" },
-                { english: "washbasin", german: "Waschbecken", lecture: "Rooms and Furniture" },
-                { english: "ghost", german: "Geist", lecture: "Halloween" },
-                { english: "monster", german: "Monster", lecture: "Halloween" },
-                { english: "moon", german: "Mond", lecture: "Halloween" },
-                { english: "pumpkin", german: "Kürbis", lecture: "Halloween" },
-                { english: "spider's web", german: "Spinnennetz", lecture: "Halloween" },
-                { english: "sweets", german: "Süßigkeiten", lecture: "Halloween" },
-                { english: "vampire", german: "Vampir", lecture: "Halloween" },
-                { english: "broom", german: "Besen", lecture: "Halloween" },
-                { english: "hat", german: "Hut", lecture: "Halloween" },
-                { english: "witch", german: "Hexe", lecture: "Halloween" },
-                { english: "football", german: "Fußball", lecture: "Toys" },
-                { english: "jigsaw puzzle", german: "Puzzle", lecture: "Toys" },
-                { english: "ball", german: "Ball", lecture: "Toys" },
-                { english: "story book", german: "Märchenbuch", lecture: "Toys" },
-                { english: "teddy bear", german: "Teddybär", lecture: "Toys" },
-                { english: "cards", german: "Karten", lecture: "Toys" },
-                { english: "toy car", german: "Spielzeugauto", lecture: "Toys" },
-                { english: "toy plane", german: "Spielzeugflugzeug", lecture: "Toys" },
-                { english: "toy train", german: "Spielzeugeisenbahn", lecture: "Toys" },
-                { english: "computer game", german: "Computerspiel", lecture: "Toys" },
-                { english: "in-line skates", german: "Inlineskates", lecture: "Toys" },
-                { english: "mountain bike", german: "Mountainbike", lecture: "Toys" },
-                { english: "music player", german: "Musikplayer", lecture: "Toys" },
-                { english: "skateboard", german: "Skateboard", lecture: "Toys" },
-                { english: "skipping rope", german: "Springseil", lecture: "Toys" },
-                { english: "playing a computer game", german: "ein Computerspiel spielen", lecture: "Hobbies" },
-                { english: "dancing", german: "tanzen", lecture: "Hobbies" },
-                { english: "playing football", german: "Fußball spielen", lecture: "Hobbies" },
-                { english: "in-line skating", german: "Inlineskaten", lecture: "Hobbies" },
-                { english: "listening to music", german: "Musik hören", lecture: "Hobbies" },
-                { english: "reading", german: "lesen", lecture: "Hobbies" },
-                { english: "riding a bike", german: "Fahrrad fahren", lecture: "Hobbies" },
-                { english: "running", german: "laufen", lecture: "Hobbies" },
-                { english: "singing", german: "singen", lecture: "Hobbies" },
-                { english: "skateboarding", german: "Skateboard fahren", lecture: "Hobbies" },
-                { english: "skiing", german: "Skifahren", lecture: "Hobbies" },
-                { english: "skipping", german: "Seil springen", lecture: "Hobbies" },
-                { english: "swimming", german: "schwimmen", lecture: "Hobbies" },
-                { english: "playing table tennis", german: "Tischtennis spielen", lecture: "Hobbies" },
-                { english: "walking", german: "spazieren gehen", lecture: "Hobbies" },
-                { english: "one", german: "eins", lecture: "Numbers" },
-                { english: "two", german: "zwei", lecture: "Numbers" },
-                { english: "three", german: "drei", lecture: "Numbers" },
-                { english: "four", german: "vier", lecture: "Numbers" },
-                { english: "five", german: "fünf", lecture: "Numbers" },
-                { english: "six", german: "sechs", lecture: "Numbers" },
-                { english: "seven", german: "sieben", lecture: "Numbers" },
-                { english: "eight", german: "acht", lecture: "Numbers" },
-                { english: "nine", german: "neun", lecture: "Numbers" },
-                { english: "ten", german: "zehn", lecture: "Numbers" },
-                { english: "eleven", german: "elf", lecture: "Numbers" },
-                { english: "twelve", german: "zwölf", lecture: "Numbers" },
-                { english: "thirteen", german: "dreizehn", lecture: "Numbers" },
-                { english: "fourteen", german: "vierzehn", lecture: "Numbers" },
-                { english: "fifteen", german: "fünfzehn", lecture: "Numbers" },
-                { english: "seventeen", german: "siebzehn", lecture: "Numbers" },
-                { english: "eighteen", german: "achtzehn", lecture: "Numbers" },
-                { english: "nineteen", german: "neunzehn", lecture: "Numbers" },
-                { english: "twenty", german: "zwanzig", lecture: "Numbers" },
-                { english: "thirty", german: "dreißig", lecture: "Numbers" },
-                { english: "forty", german: "vierzig", lecture: "Numbers" },
-                { english: "fifty", german: "fünfzig", lecture: "Numbers" },
-                { english: "sixty", german: "sechzig", lecture: "Numbers" },
-                { english: "seventy", german: "siebzig", lecture: "Numbers" },
-                { english: "eighty", german: "achtzig", lecture: "Numbers" },
-                { english: "ninety", german: "neunzig", lecture: "Numbers" },
-                { english: "hundred", german: "hundert", lecture: "Numbers" },
-                { english: "thousand", german: "tausend", lecture: "Numbers" },
-                { english: "red", german: "rot", lecture: "Colours" },
-                { english: "blue", german: "blau", lecture: "Colours" },
-                { english: "yellow", german: "gelb", lecture: "Colours" },
-                { english: "green", german: "grün", lecture: "Colours" },
-                { english: "pink", german: "rosa", lecture: "Colours" },
-                { english: "orange", german: "orange", lecture: "Colours" },
-                { english: "brown", german: "braun", lecture: "Colours" },
-                { english: "purple", german: "lila", lecture: "Colours" },
-                { english: "black", german: "schwarz", lecture: "Colours" },
-                { english: "white", german: "weiß", lecture: "Colours" },
-                { english: "father", german: "Vater", lecture: "Family" },
-                { english: "mother", german: "Mutter", lecture: "Family" },
-                { english: "sister", german: "Schwester", lecture: "Family" },
-                { english: "brother", german: "Bruder", lecture: "Family" },
-                { english: "grandfather", german: "Großvater", lecture: "Family" },
-                { english: "grandmother", german: "Großmutter", lecture: "Family" },
+                { english: "bat", german: "Fledermaus", lecture: "Animals" }, { english: "bird", german: "Vogel", lecture: "Animals" }, { english: "chick", german: "Küken", lecture: "Animals" }, { english: "cow", german: "Kuh", lecture: "Animals" }, { english: "duck", german: "Ente", lecture: "Animals" }, { english: "frog", german: "Frosch", lecture: "Animals" }, { english: "goat", german: "Ziege", lecture: "Animals" }, { english: "hen", german: "Henne", lecture: "Animals" }, { english: "horse", german: "Pferd", lecture: "Animals" }, { english: "pig", german: "Schwein", lecture: "Animals" }, { english: "sheep", german: "Schaf", lecture: "Animals" }, { english: "spider", german: "Spinne", lecture: "Animals" }, { english: "bear", german: "Bär", lecture: "Animals" }, { english: "monkey", german: "Affe", lecture: "Animals" }, { english: "tiger", german: "Tiger", lecture: "Animals" }, { english: "budgie", german: "Wellensittich", lecture: "Animals" }, { english: "cat", german: "Katze", lecture: "Animals" }, { english: "dog", german: "Hund", lecture: "Animals" }, { english: "fish", german: "Fisch", lecture: "Animals" }, { english: "guinea pig", german: "Meerschweinchen", lecture: "Animals" }, { english: "hamster", german: "Hamster", lecture: "Animals" }, { english: "mouse", german: "Maus", lecture: "Animals" }, { english: "rabbit", german: "Kaninchen", lecture: "Animals" }, { english: "rat", german: "Ratte", lecture: "Animals" }, { english: "turtle", german: "Schildkröte", lecture: "Animals" },
+                { english: "egg", german: "Ei", lecture: "Food and Drinks" }, { english: "fish and chips", german: "Fisch und Pommes", lecture: "Food and Drinks" }, { english: "ham", german: "Schinken", lecture: "Food and Drinks" }, { english: "hamburger", german: "Hamburger", lecture: "Food and Drinks" }, { english: "jam", german: "Marmelade", lecture: "Food and Drinks" }, { english: "juice", german: "Saft", lecture: "Food and Drinks" }, { english: "milk", german: "Milch", lecture: "Food and Drinks" }, { english: "muesli", german: "Müsli", lecture: "Food and Drinks" }, { english: "pizza", german: "Pizza", lecture: "Food and Drinks" }, { english: "salad", german: "Salat", lecture: "Food and Drinks" }, { english: "sausages", german: "Würstchen", lecture: "Food and Drinks" }, { english: "spaghetti", german: "Spaghetti", lecture: "Food and Drinks" }, { english: "tea", german: "Tee", lecture: "Food and Drinks" }, { english: "toast", german: "Toast", lecture: "Food and Drinks" }, { english: "yoghurt", german: "Joghurt", lecture: "Food and Drinks" }, { english: "apple", german: "Apfel", lecture: "Food and Drinks" }, { english: "banana", german: "Banane", lecture: "Food and Drinks" }, { english: "lemon", german: "Zitrone", lecture: "Food and Drinks" }, { english: "orange", german: "Orange", lecture: "Food and Drinks" }, { english: "strawberry", german: "Erdbeere", lecture: "Food and Drinks" }, { english: "tomato", german: "Tomate", lecture: "Food and Drinks" }, { english: "bread", german: "Brot", lecture: "Food and Drinks" }, { english: "butter", german: "Butter", lecture: "Food and Drinks" }, { english: "cheese", german: "Käse", lecture: "Food and Drinks" }, { english: "cornflakes", german: "Cornflakes", lecture: "Food and Drinks" },
+                { english: "bathroom", german: "Badezimmer", lecture: "Rooms and Furniture" }, { english: "bedroom", german: "Schlafzimmer", lecture: "Rooms and Furniture" }, { english: "children's room", german: "Kinderzimmer", lecture: "Rooms and Furniture" }, { english: "hall", german: "Flur", lecture: "Rooms and Furniture" }, { english: "kitchen", german: "Küche", lecture: "Rooms and Furniture" }, { english: "living room", german: "Wohnzimmer", lecture: "Rooms and Furniture" }, { english: "upstairs", german: "oben", lecture: "Rooms and Furniture" }, { english: "downstairs", german: "unten", lecture: "Rooms and Furniture" }, { english: "armchair", german: "Sessel", lecture: "Rooms and Furniture" }, { english: "bed", german: "Bett", lecture: "Rooms and Furniture" }, { english: "chair", german: "Stuhl", lecture: "Rooms and Furniture" }, { english: "cupboard", german: "Schrank", lecture: "Rooms and Furniture" }, { english: "fridge", german: "Kühlschrank", lecture: "Rooms and Furniture" }, { english: "lamp", german: "Lampe", lecture: "Rooms and Furniture" }, { english: "oven", german: "Ofen", lecture: "Rooms and Furniture" }, { english: "picture", german: "Bild", lecture: "Rooms and Furniture" }, { english: "shelf", german: "Regal", lecture: "Rooms and Furniture" }, { english: "sofa", german: "Sofa", lecture: "Rooms and Furniture" }, { english: "table", german: "Tisch", lecture: "Rooms and Furniture" }, { english: "TV", german: "Fernseher", lecture: "Rooms and Furniture" }, { english: "wardrobe", german: "Kleiderschrank", lecture: "Rooms and Furniture" }, { english: "bathtub", german: "Badewanne", lecture: "Rooms and Furniture" }, { english: "shower", german: "Dusche", lecture: "Rooms and Furniture" }, { english: "toilet", german: "Toilette", lecture: "Rooms and Furniture" }, { english: "washbasin", german: "Waschbecken", lecture: "Rooms and Furniture" },
+                { english: "ghost", german: "Geist", lecture: "Halloween" }, { english: "monster", german: "Monster", lecture: "Halloween" }, { english: "moon", german: "Mond", lecture: "Halloween" }, { english: "pumpkin", german: "Kürbis", lecture: "Halloween" }, { english: "spider's web", german: "Spinnennetz", lecture: "Halloween" }, { english: "sweets", german: "Süßigkeiten", lecture: "Halloween" }, { english: "vampire", german: "Vampir", lecture: "Halloween" }, { english: "broom", german: "Besen", lecture: "Halloween" }, { english: "hat", german: "Hut", lecture: "Halloween" }, { english: "witch", german: "Hexe", lecture: "Halloween" },
+                { english: "football", german: "Fußball", lecture: "Toys" }, { english: "jigsaw puzzle", german: "Puzzle", lecture: "Toys" }, { english: "ball", german: "Ball", lecture: "Toys" }, { english: "story book", german: "Märchenbuch", lecture: "Toys" }, { english: "teddy bear", german: "Teddybär", lecture: "Toys" }, { english: "cards", german: "Karten", lecture: "Toys" }, { english: "toy car", german: "Spielzeugauto", lecture: "Toys" }, { english: "toy plane", german: "Spielzeugflugzeug", lecture: "Toys" }, { english: "toy train", german: "Spielzeugeisenbahn", lecture: "Toys" }, { english: "computer game", german: "Computerspiel", lecture: "Toys" }, { english: "in-line skates", german: "Inlineskates", lecture: "Toys" }, { english: "mountain bike", german: "Mountainbike", lecture: "Toys" }, { english: "music player", german: "Musikplayer", lecture: "Toys" }, { english: "skateboard", german: "Skateboard", lecture: "Toys" }, { english: "skipping rope", german: "Springseil", lecture: "Toys" },
+                { english: "playing a computer game", german: "ein Computerspiel spielen", lecture: "Hobbies" }, { english: "dancing", german: "tanzen", lecture: "Hobbies" }, { english: "playing football", german: "Fußball spielen", lecture: "Hobbies" }, { english: "in-line skating", german: "Inlineskaten", lecture: "Hobbies" }, { english: "listening to music", german: "Musik hören", lecture: "Hobbies" }, { english: "reading", german: "lesen", lecture: "Hobbies" }, { english: "riding a bike", german: "Fahrrad fahren", lecture: "Hobbies" }, { english: "running", german: "laufen", lecture: "Hobbies" }, { english: "singing", german: "singen", lecture: "Hobbies" }, { english: "skateboarding", german: "Skateboard fahren", lecture: "Hobbies" }, { english: "skiing", german: "Skifahren", lecture: "Hobbies" }, { english: "skipping", german: "Seil springen", lecture: "Hobbies" }, { english: "swimming", german: "schwimmen", lecture: "Hobbies" }, { english: "playing table tennis", german: "Tischtennis spielen", lecture: "Hobbies" }, { english: "walking", german: "spazieren gehen", lecture: "Hobbies" },
+                { english: "one", german: "eins", lecture: "Numbers" }, { english: "two", german: "zwei", lecture: "Numbers" }, { english: "three", german: "drei", lecture: "Numbers" }, { english: "four", german: "vier", lecture: "Numbers" }, { english: "five", german: "fünf", lecture: "Numbers" }, { english: "six", german: "sechs", lecture: "Numbers" }, { english: "seven", german: "sieben", lecture: "Numbers" }, { english: "eight", german: "acht", lecture: "Numbers" }, { english: "nine", german: "neun", lecture: "Numbers" }, { english: "ten", german: "zehn", lecture: "Numbers" }, { english: "eleven", german: "elf", lecture: "Numbers" }, { english: "twelve", german: "zwölf", lecture: "Numbers" }, { english: "thirteen", german: "dreizehn", lecture: "Numbers" }, { english: "fourteen", german: "vierzehn", lecture: "Numbers" }, { english: "fifteen", german: "fünfzehn", lecture: "Numbers" }, { english: "seventeen", german: "siebzehn", lecture: "Numbers" }, { english: "eighteen", german: "achtzehn", lecture: "Numbers" }, { english: "nineteen", german: "neunzehn", lecture: "Numbers" }, { english: "twenty", german: "zwanzig", lecture: "Numbers" }, { english: "thirty", german: "dreißig", lecture: "Numbers" }, { english: "forty", german: "vierzig", lecture: "Numbers" }, { english: "fifty", german: "fünfzig", lecture: "Numbers" }, { english: "sixty", german: "sechzig", lecture: "Numbers" }, { english: "seventy", german: "siebzig", lecture: "Numbers" }, { english: "eighty", german: "achtzig", lecture: "Numbers" }, { english: "ninety", german: "neunzig", lecture: "Numbers" }, { english: "hundred", german: "hundert", lecture: "Numbers" }, { english: "thousand", german: "tausend", lecture: "Numbers" },
+                { english: "red", german: "rot", lecture: "Colours" }, { english: "blue", german: "blau", lecture: "Colours" }, { english: "yellow", german: "gelb", lecture: "Colours" }, { english: "green", german: "grün", lecture: "Colours" }, { english: "pink", german: "rosa", lecture: "Colours" }, { english: "orange", german: "orange", lecture: "Colours" }, { english: "brown", german: "braun", lecture: "Colours" }, { english: "purple", german: "lila", lecture: "Colours" }, { english: "black", german: "schwarz", lecture: "Colours" }, { english: "white", german: "weiß", lecture: "Colours" },
+                { english: "father", german: "Vater", lecture: "Family" }, { english: "mother", german: "Mutter", lecture: "Family" }, { english: "sister", german: "Schwester", lecture: "Family" }, { english: "brother", german: "Bruder", lecture: "Family" }, { english: "grandfather", german: "Großvater", lecture: "Family" }, { english: "grandmother", german: "Großmutter", lecture: "Family" },
             ];
 
             // --- DOM Elements ---
             const navToggleBtn = document.getElementById('nav-toggle-btn');
+            const navAvatarInitial = document.getElementById('nav-avatar-initial');
             const navMenu = document.getElementById('nav-menu');
             const navLinks = document.querySelectorAll('.nav-link');
             const pages = document.querySelectorAll('.page');
@@ -605,6 +476,7 @@
             const quizSection = document.getElementById('quiz-section');
             const quizFeedbackView = document.getElementById('quiz-feedback-view');
             const headerQuizBtn = document.getElementById('header-quiz-btn');
+            const mainPageNickname = document.getElementById('main-page-nickname');
             const goToQuizSetupBtn = document.getElementById('go-to-quiz-setup-btn');
             const quizSuggestionsContainer = document.getElementById('quiz-suggestions');
             const addCardForm = document.getElementById('add-card-form');
@@ -726,7 +598,7 @@
                     document.querySelector(`input[name="quiz-direction"][value="${quizHistory[0].direction}"]`).checked = true;
                     document.querySelector(`input[name="quiz-mode"][value="${quizHistory[0].mode}"]`).checked = true;
                 } else { // Fallback to app defaults if no history
-                     document.querySelector(`input[name="quiz-direction"][value="de-en"]`).checked = true;
+                     document.querySelector(`input[name="quiz-direction"][value="mixed"]`).checked = true;
                      document.querySelector(`input[name="quiz-mode"][value="choice"]`).checked = true;
                 }
                 showModal(quizSetupView);
@@ -812,7 +684,7 @@
             }
             
             // --- Translation API Calls (omitted for brevity) ---
-            async function callGeminiAPI(userQuery, expectJson = false) {
+             async function callGeminiAPI(userQuery, expectJson = false) {
                 const apiKey = "";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ parts: [{ text: userQuery }] }] };
@@ -1139,7 +1011,7 @@
                         });
                         cardListEl.appendChild(lectureGroup);
                     });
-                } else { cardListEl.innerHTML = '<p class="text-slate-500 text-sm">Add phrases to get started!</p>'; }
+                } else { cardListEl.innerHTML = '<p class="text-sm text-slate-500">Add phrases to get started!</p>'; }
             }
             cardListEl.addEventListener('click', (e) => {
                 const speakBtn = e.target.closest('.speak-list-btn');
@@ -1244,7 +1116,7 @@
                 quizSuggestionsContainer.innerHTML = '';
                 if (quizHistory.length > 0) {
                     const lastQuiz = quizHistory[0];
-                    const direction = lastQuiz.direction === 'en-de' ? 'EN → DE' : 'DE → EN';
+                    const direction = lastQuiz.direction === 'mixed' ? 'Mixed' : (lastQuiz.direction === 'en-de' ? 'EN → DE' : 'DE → EN');
                     const repeatButtonHTML = `
                         <button data-lecture="${lastQuiz.lecture}" data-direction="${lastQuiz.direction}" data-mode="${lastQuiz.mode}" class="direct-start-btn w-full text-left p-3 border-2 border-[var(--accent-500)] rounded-lg hover:bg-slate-50">
                             <p class="font-semibold text-[var(--accent-600)]">Repeat Last Quiz</p>
@@ -1277,10 +1149,10 @@
                 const uniqueSuggestions = [...new Map(suggestions.map(item => [item['lecture'], item])).values()].slice(0, 3);
 
                 const suggestionsHTML = uniqueSuggestions.map(s => {
-                    return `<button data-lecture="${s.lecture}" data-direction="de-en" data-mode="choice" class="direct-start-btn w-full text-left p-3 border rounded-lg hover:bg-slate-50"><p class="font-semibold">${s.lecture}</p><p class="text-sm text-slate-500">${s.reason}</p></button>`;
+                    return `<button data-lecture="${s.lecture}" data-direction="mixed" data-mode="choice" class="direct-start-btn w-full text-left p-3 border rounded-lg hover:bg-slate-50"><p class="font-semibold">${s.lecture}</p><p class="text-sm text-slate-500">${s.reason}</p></button>`;
                 }).join('');
-                 quizSuggestionsContainer.innerHTML += suggestionsHTML;
                 
+                quizSuggestionsContainer.innerHTML += suggestionsHTML;
                  if (quizSuggestionsContainer.innerHTML === '') {
                     quizSuggestionsContainer.innerHTML = '<p class="text-sm text-slate-500">Practice to get smart suggestions!</p>';
                 }
@@ -1299,13 +1171,22 @@
             }
              // --- History Page Logic ---
             function getStarsHTML(percentage) {
+                let filledStars = 0;
+                if (percentage >= 95) { filledStars = 5; } 
+                else if (percentage >= 80) { filledStars = 4; } 
+                else if (percentage >= 60) { filledStars = 3; } 
+                else if (percentage >= 40) { filledStars = 2; } 
+                else if (percentage >= 20) { filledStars = 1; }
+                
                 let starsHTML = '';
-                if(percentage >= 95) { starsHTML = '⭐⭐⭐⭐⭐'; }
-                else if (percentage >= 80) { starsHTML = '⭐⭐⭐⭐<span class="star-rating">⭐</span>'; }
-                else if (percentage >= 60) { starsHTML = '⭐⭐⭐<span class="star-rating">⭐⭐</span>'; }
-                else if (percentage >= 40) { starsHTML = '⭐⭐<span class="star-rating">⭐⭐⭐</span>'; }
-                else { starsHTML = '⭐<span class="star-rating">⭐⭐⭐⭐</span>'; }
-                return starsHTML.replace(/⭐/g, '<span class="filled">★</span>').replace(/<span class="star-rating">★<\/span>/g, '★');
+                for (let i = 0; i < 5; i++) {
+                    if (i < filledStars) {
+                        starsHTML += '<span class="filled">★</span>';
+                    } else {
+                        starsHTML += '★';
+                    }
+                }
+                return `<span class="star-rating">${starsHTML}</span>`;
             }
 
             function updateHistoryPage() {
@@ -1315,7 +1196,7 @@
                 }
                 historyListEl.innerHTML = quizHistory.map(item => {
                     const date = new Date(item.date).toLocaleString();
-                    const direction = item.direction === 'en-de' ? 'EN → DE' : 'DE → EN';
+                    const direction = item.direction === 'mixed' ? 'Mixed' : (item.direction === 'en-de' ? 'EN → DE' : 'DE → EN');
                     const percentage = item.presented > 0 ? (item.correct / item.presented) * 100 : 0;
                     const stars = getStarsHTML(percentage);
                     return `
@@ -1362,9 +1243,10 @@
                     return;
                 }
                 
+                const tempDirection = direction === 'mixed' ? 'en-de' : direction; // Use a consistent direction for binning
                 const bins = { 1: [], 2: [], 3: [], 4: [] };
                 allCardsInLecture.forEach(card => {
-                    const s = card.scores[direction][mode];
+                    const s = card.scores[tempDirection][mode];
                     const total = s.correct + s.incorrect;
                     const rate = total === 0 ? -1 : s.correct / total;
                     if (rate < settings.binThresholds.p1 / 100) bins[1].push(card);
@@ -1407,9 +1289,15 @@
                 currentCard = quizQueue.shift();
                 quizSessionStats.presented++;
                 
-                const { direction, mode } = quizSettings;
-                const question = direction === 'en-de' ? currentCard.english : currentCard.german;
-                const answer = direction === 'en-de' ? currentCard.german : currentCard.english;
+                let { direction, mode } = quizSettings;
+                 if (direction === 'mixed') {
+                    currentCard.currentDirection = Math.random() < 0.5 ? 'en-de' : 'de-en';
+                } else {
+                    currentCard.currentDirection = direction;
+                }
+
+                const question = currentCard.currentDirection === 'en-de' ? currentCard.english : currentCard.german;
+                const answer = currentCard.currentDirection === 'en-de' ? currentCard.german : currentCard.english;
                 currentCard.question = question;
                 currentCard.answer = answer;
 
@@ -1423,17 +1311,17 @@
                     quizReason.textContent = 'Repeating a missed phrase';
                     delete currentCard.isRepeat; // Consume the flag
                 } else {
-                    const bin = getBinForQuiz(currentCard, quizSettings.direction, quizSettings.mode);
+                    const bin = getBinForQuiz(currentCard, currentCard.currentDirection, quizSettings.mode);
                     quizReason.textContent = `Reason: ${bin.label}`;
                 }
 
-                if (direction === 'en-de') {
+                if (currentCard.currentDirection === 'en-de') {
                     setTimeout(() => speak(question, 'en-US'), 100); 
                 }
 
                 quizWord.innerHTML = `<b>${question}</b>`;
-                speakQuestionBtn.classList.toggle('hidden', direction !== 'en-de');
-                quizPromptText.textContent = `What is the ${direction === 'en-de' ? 'German' : 'English'} translation?`;
+                speakQuestionBtn.classList.toggle('hidden', currentCard.currentDirection !== 'en-de');
+                quizPromptText.textContent = `What is the ${currentCard.currentDirection === 'en-de' ? 'German' : 'English'} translation?`;
 
                 resultArea.classList.add('hidden');
                 quizInputArea.classList.remove('hidden');
@@ -1446,7 +1334,7 @@
                     typingInputContainer.classList.add('hidden'); choiceInputContainer.classList.remove('hidden'); speechInputContainer.classList.add('hidden');
                     let options = [answer];
                     const allAnswers = (quizSettings.lecture === 'all' ? flashcards : flashcards.filter(c => c.lecture === quizSettings.lecture))
-                                     .map(c => direction === 'en-de' ? c.german : c.english);
+                                     .map(c => currentCard.currentDirection === 'en-de' ? c.german : c.english);
                     const wrongAnswers = shuffle(allAnswers.filter(a => a !== answer));
                     while (options.length < 3 && wrongAnswers.length > 0) {
                         options.push(wrongAnswers.pop());
@@ -1463,7 +1351,7 @@
                 
                 const cardInDb = flashcards.find(c => c.id === currentCard.id);
                 if (cardInDb) {
-                    const s = cardInDb.scores[quizSettings.direction][quizSettings.mode];
+                    const s = cardInDb.scores[currentCard.currentDirection][quizSettings.mode];
                     if(isCorrect) {
                         s.correct++;
                         s.lastTrained = new Date().toISOString();
@@ -1485,11 +1373,13 @@
 
                 const startTimer = () => {
                     const delay = isCorrect ? settings.autoAdvanceCorrect * 1000 : settings.autoAdvanceWrong * 1000;
-                    autoAdvanceTimer = setTimeout(loadNextQuestion, delay);
+                    if(delay >= 0) {
+                       autoAdvanceTimer = setTimeout(loadNextQuestion, delay);
+                    }
                 };
 
-                if(isCorrect && quizSettings.direction === 'de-en'){
-                    speak(currentCard.english, 'en-US', startTimer);
+                if(isCorrect && currentCard.currentDirection === 'de-en'){
+                     speak(currentCard.english, 'en-US', startTimer);
                 } else {
                     startTimer();
                 }
@@ -1522,11 +1412,11 @@
                 
                 feedbackStars.innerHTML = getStarsHTML(percentage);
                 let message = '';
-                if(percentage >= 95) { message = 'Outstanding! You\'re a vocabulary superstar!'; }
-                else if (percentage >= 80) { message = 'Great Job! You have a strong command of these.'; }
-                else if (percentage >= 60) { message = 'Good Effort! Keep it up!'; }
-                else if (percentage >= 40) { message = 'Nice Try! Practice makes perfect.'; }
-                else { message = 'Keep Studying! Every attempt helps.'; }
+                if(percentage >= 95) { message = `Outstanding, ${settings.nickname}! You're a vocabulary superstar!`; }
+                else if (percentage >= 80) { message = `Great Job, ${settings.nickname}! You have a strong command of these.`; }
+                else if (percentage >= 60) { message = `Good Effort, ${settings.nickname}! Keep it up!`; }
+                else if (percentage >= 40) { message = `Nice Try, ${settings.nickname}! Practice makes perfect.`; }
+                else { message = `Keep Studying, ${settings.nickname}! Every attempt helps.`; }
                 feedbackMessage.textContent = message;
                 showModal(quizFeedbackView);
             }
@@ -1538,6 +1428,7 @@
                 
                 // Set defaults and handle migration from old settings structure
                 settings = {
+                    nickname: tempSettings.nickname || 'BetaKlug',
                     theme: tempSettings.theme || 'blue',
                     autoAdvanceCorrect: tempSettings.autoAdvanceCorrect ?? 0,
                     autoAdvanceWrong: tempSettings.autoAdvanceWrong ?? 3,
@@ -1554,6 +1445,8 @@
             function applySettings() {
                 document.body.classList.remove('theme-blue', 'theme-green');
                 document.body.classList.add(`theme-${settings.theme}`);
+                mainPageNickname.textContent = settings.nickname;
+                navAvatarInitial.textContent = settings.nickname ? settings.nickname.charAt(0).toUpperCase() : '?';
             }
             function updateSettingsPage() {
                 document.querySelector(`input[name="theme"][value="${settings.theme}"]`).checked = true;
@@ -1561,6 +1454,7 @@
                 document.getElementById('auto-advance-wrong-time').value = settings.autoAdvanceWrong;
                 document.getElementById('max-quiz-questions').value = settings.maxQuestions;
                 document.getElementById('repeat-after-input').value = settings.repeatAfter;
+                document.getElementById('nickname-input').value = settings.nickname;
                 
                 bin1Slider.value = settings.binThresholds.p1;
                 bin2Slider.value = settings.binThresholds.p2;
@@ -1576,7 +1470,6 @@
                 bin1Label.textContent = `0-${p1}%`;
                 bin2Label.textContent = `${p1}-${p2}%`;
                 bin3Label.textContent = `${p2}-${p3}%`;
-                // Adjust constraints to prevent overlap
                 bin2Slider.min = p1 + 1;
                 bin3Slider.min = p2 + 1;
                 bin1Slider.max = p2 - 1;
@@ -1600,6 +1493,7 @@
                 settings.binThresholds.p1 = parseInt(bin1Slider.value, 10);
                 settings.binThresholds.p2 = parseInt(bin2Slider.value, 10);
                 settings.binThresholds.p3 = parseInt(bin3Slider.value, 10);
+                settings.nickname = document.getElementById('nickname-input').value.trim() || 'BetaKlug';
                 
                 saveSettings();
                 applySettings();
