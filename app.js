@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const app = (() => {
+        const APP_VERSION = '1.0.3';
+
         const SUPPORTED_LANGUAGES = [
             { code: 'en-US', name: 'English' },
             { code: 'de-DE', name: 'German' },
@@ -84,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 foreignToNative: document.querySelector('label[for="dir-de-en"]'),
             },
             modeSpeech: document.getElementById('mode-speech'),
+            footerVersion: document.querySelector('footer p'),
         };
         
         const State = {
@@ -599,17 +602,24 @@ document.addEventListener('DOMContentLoaded', () => {
             defaultScore: () => ({ correct: 0, incorrect: 0, lastTrained: null }),
             loadSettings() {
                 const savedSettings = JSON.parse(localStorage.getItem('settings') || '{}');
+
+                // Migration check: If the saved version is not the current app version,
+                // we can enforce new defaults for specific settings.
+                const needsDefaultUpdate = savedSettings.version !== APP_VERSION;
+
                 State.settings = {
+                    version: APP_VERSION, // Always stamp the current version
                     nickname: savedSettings.nickname || 'BetaKlug',
                     theme: savedSettings.theme || 'purple',
-                    nativeLangCode: savedSettings.nativeLangCode || 'de-DE',
-                    foreignLangCode: savedSettings.foreignLangCode || 'en-US',
-                    autoAdvanceCorrect: savedSettings.autoAdvanceCorrect ?? 60,
-                    autoAdvanceWrong: savedSettings.autoAdvanceWrong ?? 60,
-                    maxQuestions: savedSettings.maxQuestions || 20,
-                    repeatAfter: savedSettings.repeatAfter || 5,
-                    binThresholds: savedSettings.binThresholds || { p1: 25, p2: 50, p3: 75 }
+                    nativeLangCode: needsDefaultUpdate ? 'de-DE' : (savedSettings.nativeLangCode || 'de-DE'),
+                    foreignLangCode: needsDefaultUpdate ? 'en-US' : (savedSettings.foreignLangCode || 'en-US'),
+                    autoAdvanceCorrect: needsDefaultUpdate ? 60 : (savedSettings.autoAdvanceCorrect ?? 60),
+                    autoAdvanceWrong: needsDefaultUpdate ? 60 : (savedSettings.autoAdvanceWrong ?? 60),
+                    maxQuestions: savedSettings.maxQuestions || 20, // Keep user's preference if it exists
+                    repeatAfter: savedSettings.repeatAfter || 5, // Keep user's preference if it exists
+                    binThresholds: savedSettings.binThresholds || { p1: 25, p2: 50, p3: 75 } // Keep user's preference
                 };
+                this.saveSettings(); // Save immediately to ensure migration only runs once.
             },
             loadData() {
                 const localCards = JSON.parse(localStorage.getItem('flashcards') || '[]');
@@ -705,6 +715,9 @@ document.addEventListener('DOMContentLoaded', () => {
             Data.loadData();
             Speech.init();
             
+            document.title = `Flashcard Language Quiz - v${APP_VERSION}`;
+            DOM.footerVersion.textContent = `Vocabulary Quiz - v${APP_VERSION}`;
+
             UI.populateLanguageSelectors();
             UI.applySettings();
             UI.updateCardList();
