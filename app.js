@@ -225,18 +225,23 @@ document.addEventListener('DOMContentLoaded', () => {
                              const cardEl = document.createElement('div');
                              cardEl.className = 'flex justify-between items-start bg-slate-50 p-2 rounded-lg';
                              const bin = Quiz.getBinForCard(card);
+                             const dateAdded = card.datesAdded?.[foreignLangCode] 
+                                 ? new Date(card.datesAdded[foreignLangCode]).toLocaleDateString() 
+                                 : '';
+
                              cardEl.innerHTML = `
                                  <div class="flex-grow">
                                      <p class="text-sm font-medium text-slate-800"><b>${card.translations[nativeLangCode]}</b></p>
                                      <div class="flex items-center gap-1">
                                          <p class="text-sm text-slate-500">/ ${card.translations[foreignLangCode]}</p>
-                                         <button data-speak-text="${card.translations[foreignLangCode]}" data-speak-lang="${foreignLangCode}" class="speak-list-btn p-1 rounded-full hover:bg-slate-200">
+                                         <button data-speak-text="${card.translations[foreignLangCode]}" data-speak-lang="${foreignLangCode}" class="speak-list-btn p-1 rounded-full hover:bg-slate-200 transition-colors">
                                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-500"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
                                          </button>
                                      </div>
                                  </div>
                                  <div class="flex flex-col items-end">
-                                     <span class="text-xs font-bold text-white ${bin.color} px-2 py-0.5 rounded-full mb-2">${bin.label}</span>
+                                     <span class="text-xs font-bold text-white ${bin.color} px-2 py-0.5 rounded-full mb-1">${bin.label}</span>
+                                     <span class="text-xs text-slate-400 mb-1">${dateAdded}</span>
                                      <button data-id="${card.id}" class="delete-btn text-red-400 hover:text-red-600 p-1 text-xl leading-none">&times;</button>
                                  </div>`;
                              lectureGroup.appendChild(cardEl);
@@ -304,31 +309,46 @@ document.addEventListener('DOMContentLoaded', () => {
             updateQuizSuggestions() {
                 DOM.quizSuggestionsContainer.innerHTML = '';
                 const { nativeLangCode, foreignLangCode } = State.settings;
+                const relevantCards = State.flashcards.filter(c => c.translations[nativeLangCode] && c.translations[foreignLangCode]);
+
+                if (relevantCards.length === 0) {
+                    DOM.quizSuggestionsContainer.innerHTML = '<p class="text-sm text-slate-500">Add some phrases to get smart suggestions!</p>';
+                    return;
+                }
+
                 const lectureStats = {};
-                State.flashcards
-                    .filter(c => c.translations[nativeLangCode] && c.translations[foreignLangCode])
-                    .forEach(card => {
-                        if (!lectureStats[card.lecture]) {
-                            lectureStats[card.lecture] = { attempts: 0, correct: 0 };
+                relevantCards.forEach(card => {
+                    if (!lectureStats[card.lecture]) {
+                        lectureStats[card.lecture] = { attempts: 0, correct: 0 };
+                    }
+                    const scoreKey = `${nativeLangCode}_${foreignLangCode}`;
+                    const scoreKeyRev = `${foreignLangCode}_${nativeLangCode}`;
+                    [scoreKey, scoreKeyRev].forEach(key => {
+                        if (card.scores && card.scores[key]) {
+                            Object.values(card.scores[key]).forEach(mode => {
+                                lectureStats[card.lecture].attempts += mode.correct + mode.incorrect;
+                                lectureStats[card.lecture].correct += mode.correct;
+                            });
                         }
-                        const scoreKey = `${nativeLangCode}_${foreignLangCode}`;
-                        const scoreKeyRev = `${foreignLangCode}_${nativeLangCode}`;
-                        [scoreKey, scoreKeyRev].forEach(key => {
-                            if (card.scores && card.scores[key]) {
-                                Object.values(card.scores[key]).forEach(mode => {
-                                    lectureStats[card.lecture].attempts += mode.correct + mode.incorrect;
-                                    lectureStats[card.lecture].correct += mode.correct;
-                                });
-                            }
-                        });
                     });
+                });
 
                 const suggestions = [];
+                
+                // Suggestion 1: Least practiced
                 const sortedByAttempts = Object.entries(lectureStats).sort((a, b) => a[1].attempts - b[1].attempts);
                 if (sortedByAttempts.length > 0) {
                     suggestions.push({ lecture: sortedByAttempts[0][0], reason: `Least practiced (${sortedByAttempts[0][1].attempts} attempts)` });
                 }
 
+                // Suggestion 2: Latest added words
+                const cardsWithDate = relevantCards.filter(c => c.datesAdded?.[foreignLangCode]);
+                if (cardsWithDate.length > 0) {
+                    const mostRecentCard = cardsWithDate.reduce((latest, current) => new Date(current.datesAdded[foreignLangCode]) > new Date(latest.datesAdded[foreignLangCode]) ? current : latest);
+                    suggestions.push({ lecture: mostRecentCard.lecture, reason: 'Practice newly added words' });
+                }
+
+                // Suggestion 3: Lowest success rate
                 const sortedByRate = Object.entries(lectureStats)
                     .filter(([, stats]) => stats.attempts > 5)
                     .sort((a, b) => (a[1].correct / a[1].attempts) - (b[1].correct / b[1].attempts));
@@ -338,8 +358,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     suggestions.push({ lecture: sortedByRate[0][0], reason: `Lowest success rate (${rate}%)` });
                 }
 
-                if (suggestions.length > 0) {
-                    DOM.quizSuggestionsContainer.innerHTML = suggestions.slice(0, 3).map(s => 
+                // Filter out duplicate lectures and take the top 4
+                const finalSuggestions = suggestions.filter((suggestion, index, self) => index === self.findIndex(s => s.lecture === suggestion.lecture)).slice(0, 4);
+
+                if (finalSuggestions.length > 0) {
+                    DOM.quizSuggestionsContainer.innerHTML = finalSuggestions.map(s => 
                         `<button data-lecture="${s.lecture}" class="direct-start-btn w-full text-left p-3 border rounded-lg hover:bg-slate-50">
                             <p class="font-semibold">${s.lecture}</p>
                             <p class="text-sm text-slate-500">${s.reason}</p>
@@ -625,11 +648,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const localCards = JSON.parse(localStorage.getItem('flashcards') || '[]');
                 if (localCards.length > 0 && localCards[0].english) { // Old format detected
                     State.flashcards = localCards.map(card => ({
-                        id: card.id,
-                        lecture: card.lecture,
-                        translations: { 'en-US': card.english, 'de-DE': card.german },
-                        scores: card.scores || {}
-                    }));
+                         id: card.id,
+                         lecture: card.lecture,
+                         translations: { 'en-US': card.english, 'de-DE': card.german },
+                         datesAdded: {
+                             'en-US': new Date().toISOString(), // Assign current date for migrated data
+                             'de-DE': new Date().toISOString()
+                         },
+                         scores: card.scores || {}
+                     }));
                     this.saveFlashcards();
                     UI.showToast('Old data format migrated!');
                 } else {
@@ -653,6 +680,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         Object.keys(defaultCard.translations).forEach(langCode => {
                             if (!existingCard.translations[langCode]) {
                                 existingCard.translations[langCode] = defaultCard.translations[langCode];
+                                if (!existingCard.datesAdded) existingCard.datesAdded = {};
+                                existingCard.datesAdded[langCode] = new Date().toISOString();
                                 updated = true;
                             }
                         });
@@ -662,6 +691,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             id: newId,
                             lecture: defaultCard.lecture,
                             translations: defaultCard.translations,
+                            datesAdded: Object.keys(defaultCard.translations).reduce((acc, langCode) => {
+                                acc[langCode] = new Date().toISOString();
+                                return acc;
+                            }, {}),
                             scores: {}
                         });
                         updated = true;
@@ -772,12 +805,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (existingCard) {
                     existingCard.translations[nativeLangCode] = nativePhrase;
                     existingCard.translations[foreignLangCode] = foreignPhrase;
+                    if (!existingCard.datesAdded) existingCard.datesAdded = {};
+                    if (!existingCard.datesAdded[nativeLangCode]) existingCard.datesAdded[nativeLangCode] = new Date().toISOString();
+                    if (!existingCard.datesAdded[foreignLangCode]) existingCard.datesAdded[foreignLangCode] = new Date().toISOString();
                     UI.showToast('Updated existing phrase.');
                 } else {
                     const newId = State.flashcards.length > 0 ? Math.max(...State.flashcards.map(c => c.id)) + 1 : 1;
+                    const now = new Date().toISOString();
                     State.flashcards.push({
                         id: newId, lecture,
                         translations: { [nativeLangCode]: nativePhrase, [foreignLangCode]: foreignPhrase },
+                        datesAdded: {
+                            [nativeLangCode]: now,
+                            [foreignLangCode]: now
+                        },
                         scores: {}
                     });
                     UI.showToast('New phrase added!');
